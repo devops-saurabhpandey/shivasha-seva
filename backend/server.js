@@ -35,6 +35,7 @@ const intakeSchema = new mongoose.Schema({
   category: { type: String, required: true, maxlength: 100 },
   location: { type: String, required: true, maxlength: 120 },
   details: { type: String, default: "", maxlength: 1500 },
+  priority: { type: String, enum: ["normal", "urgent", "emergency"], default: "normal" },
   consent: { type: Boolean, required: true, validate: value => value === true },
   status: { type: String, enum: ["new", "reviewed", "closed"], default: "new" }
 }, { timestamps: true, strict: "throw" });
@@ -56,8 +57,10 @@ function validateIntake(body, kind) {
   const category = cleanText(kind === "request" ? body.type : body.interest, 100);
   const location = cleanText(body.location, 120);
   const details = kind === "request" ? cleanText(body.details, 1500) : "";
+  const priority = kind === "request" ? (body.priority || "normal") : "normal";
   if (!category || !location || (kind === "request" && !details)) return { error: "कृपया सभी आवश्यक जानकारी भरें।" };
-  return { value: { kind, category, location, details, consent: true } };
+  if (!["normal", "urgent", "emergency"].includes(priority)) return { error: "कृपया मान्य प्राथमिकता चुनें।" };
+  return { value: { kind, category, location, details, priority, consent: true } };
 }
 
 app.get("/api/health", (_req, res) => {
@@ -85,8 +88,10 @@ app.post("/api/volunteers", intakeLimiter, async (req, res, next) => {
 
 function authorized(req) {
   const supplied = req.get("authorization")?.replace(/^Bearer\s+/i, "") || "";
-  if (!adminApiKey || supplied.length !== adminApiKey.length) return false;
-  return crypto.timingSafeEqual(Buffer.from(supplied), Buffer.from(adminApiKey));
+  const suppliedBuffer = Buffer.from(supplied, "utf8");
+  const expectedBuffer = Buffer.from(adminApiKey, "utf8");
+  if (!adminApiKey || suppliedBuffer.length !== expectedBuffer.length) return false;
+  return crypto.timingSafeEqual(suppliedBuffer, expectedBuffer);
 }
 
 app.patch("/api/admin/submissions/:kind/:id", adminLimiter, async (req, res, next) => {
