@@ -31,6 +31,10 @@ function prepareShare(form, feedbackId, heading, endpoint, categoryField) {
     if (endpoint === "/api/requests") {
       payload.details = String(data.get("details") || "").trim();
       payload.priority = String(data.get("priority") || "normal");
+    } else if (endpoint === "/api/volunteers") {
+      payload.availableDays = data.getAll("availableDays").map(value => String(value));
+      payload.preferredTime = String(data.get("preferredTime") || "any");
+      payload.contactConsent = form.elements.namedItem("contactConsent")?.checked === true;
     }
 
     const apiBase = String(window.SHIVASHA_API_BASE_URL || "").trim().replace(/\/$/, "");
