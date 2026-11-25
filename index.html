@@ -97,6 +97,10 @@
           <label>किस तरह की सहायता चाहिए?
             <select name="type" required><option value="">चुनें</option><option>जरूरतमंद व्यक्ति / परिवार</option><option>बुजुर्ग या दिव्यांग सहायता</option><option>घायल / बीमार पशु</option><option>घायल पक्षी</option><option>रक्तदान / स्वास्थ्य</option><option>शिक्षा सामग्री</option><option>अन्य</option></select>
           </label>
+          <label>सहायता की प्राथमिकता
+            <select name="priority" required><option value="normal" selected>सामान्य — नियमित सहायता</option><option value="urgent">तत्काल — जल्द सहायता आवश्यक</option><option value="emergency">आपातकालीन — गंभीर खतरा / चोट</option></select>
+          </label>
+          <p class="safety-note">आपातकालीन स्थिति में पुलिस, एम्बुलेंस या संबंधित स्थानीय आपात सेवा से तुरंत संपर्क करें। Shivasha Seva का फॉर्म आपातकालीन सेवाओं का विकल्प नहीं है।</p>
           <label>क्षेत्र / शहर <input name="location" required placeholder="जैसे: कानपुर, उत्तर प्रदेश"></label>
           <label>संक्षिप्त विवरण <textarea name="details" rows="4" required placeholder="किस प्रकार की मदद चाहिए? कृपया निजी या संवेदनशील जानकारी न लिखें।"></textarea></label>
           <label class="check-label"><input type="checkbox" name="consent" value="true" required> मैं सहमत हूँ कि संदेश में अनावश्यक निजी जानकारी शामिल नहीं है और इसे समीक्षा के लिए दर्ज किया जा सकता है।</label>
