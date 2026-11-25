@@ -5,3 +5,5 @@
 .priority-emergency td{background:#fff0ed}.priority-urgent td{background:#fff8e8}.priority-emergency td:nth-child(3){color:#a32920;font-weight:800}.priority-urgent td:nth-child(3){color:#895600;font-weight:800}
 
 .emergency-alert{margin:14px 0;padding:14px 16px;border:1px solid #e9aaa3;border-left:5px solid #b42318;border-radius:10px;background:#fff0ed;color:#8f1d16;font-weight:800}.emergency-alert[hidden]{display:none}
+
+.match-note{font-size:.85rem;color:#365b49}
