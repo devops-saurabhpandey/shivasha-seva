@@ -2,12 +2,23 @@
 
 Node.js API for receiving help requests and volunteer-interest submissions from the GitHub Pages website.
 
+## Shared Shivasha database
+
+This API reuses the existing Shivasha MongoDB service and the existing `shivasha` database. It does **not** create a separate database or MongoDB instance.
+
+It writes only to these Seva-specific collections:
+
+- `seva_help_requests` — help requests.
+- `seva_volunteers` — volunteer-interest submissions.
+
+Other Shivasha modules keep their own collections. Do not run database-drop or reset commands for this service.
+
 ## Endpoints
 
 - `GET /api/health` — service and MongoDB connection status.
 - `POST /api/requests` — stores a help request after consent and validation.
 - `POST /api/volunteers` — stores a volunteer-interest submission after consent and validation.
-- `GET /api/admin/submissions?limit=50` — lists recent submissions; requires `Authorization: Bearer <ADMIN_API_KEY>`.
+- `GET /api/admin/submissions?limit=50` — lists recent submissions from both Seva collections; requires `Authorization: Bearer <ADMIN_API_KEY>`.
 
 Submissions are private and are not published to the website. The admin key must never be placed in browser code.
 
@@ -15,14 +26,16 @@ Submissions are private and are not published to the website. The admin key must
 
 Copy `.env.example` into the server's secret environment and set:
 
-- `MONGODB_URI`: connection string for the self-hosted MongoDB database.
+- `MONGODB_URI`: use the existing internal connection string `mongodb://shivasha-database:27017/shivasha` when this API container joins the existing Shivasha Docker network.
 - `ADMIN_API_KEY`: a randomly generated secret of at least 32 characters.
 - `FRONTEND_ORIGIN`: exact website origin, normally `https://devops-saurabhpandey.github.io`.
 - `PORT`: defaults to `8080`.
 
+Never expose MongoDB port 27017 publicly. The API container must be attached to the same private Docker network as the existing `shivasha-database` service; verify the actual network name on the host before deployment.
+
 ## Run with Docker
 
-Build this directory as an image and run it on the same private Docker network as MongoDB. Publish the API only behind a reverse proxy with HTTPS. Do not expose MongoDB's port to the public internet.
+Build this directory as an image and run it on the existing Shivasha private Docker network. Publish the API only behind a reverse proxy with HTTPS. Do not start a second MongoDB container for Seva.
 
 ## Current integration status
 
