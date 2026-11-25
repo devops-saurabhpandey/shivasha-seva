@@ -34,3 +34,5 @@ jobs:
         run: node --check server.js
       - name: Check admin dashboard JavaScript syntax
         run: node --check ../admin.js
+      - name: Check public website JavaScript syntax
+        run: node --check ../script.js
