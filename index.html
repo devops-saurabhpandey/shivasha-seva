@@ -117,7 +117,23 @@
           <label>आप किस सेवा में मदद करना चाहेंगे?
             <select name="interest" required><option value="">सेवा चुनें</option><option>मानव सहायता</option><option>पशु सहायता</option><option>पक्षी सेवा</option><option>स्वास्थ्य / रक्तदान</option><option>शिक्षा सहयोग</option><option>तकनीकी / अन्य सहयोग</option></select>
           </label>
-          <label>आपका शहर / क्षेत्र <input name="location" required placeholder="शहर या क्षेत्र"></label>
+          <label>आपका शहर / सेवा क्षेत्र <input name="location" required maxlength="120" placeholder="शहर, मोहल्ला या आसपास का क्षेत्र"></label>
+          <fieldset class="availability-field">
+            <legend>आप किन दिनों में उपलब्ध हैं?</legend>
+            <div class="day-options">
+              <label><input type="checkbox" name="availableDays" value="Mon"> सोम</label>
+              <label><input type="checkbox" name="availableDays" value="Tue"> मंगल</label>
+              <label><input type="checkbox" name="availableDays" value="Wed"> बुध</label>
+              <label><input type="checkbox" name="availableDays" value="Thu"> गुरु</label>
+              <label><input type="checkbox" name="availableDays" value="Fri"> शुक्र</label>
+              <label><input type="checkbox" name="availableDays" value="Sat"> शनि</label>
+              <label><input type="checkbox" name="availableDays" value="Sun"> रवि</label>
+            </div>
+          </fieldset>
+          <label>सुविधाजनक समय
+            <select name="preferredTime"><option value="any">कोई भी समय</option><option value="morning">सुबह</option><option value="afternoon">दोपहर</option><option value="evening">शाम</option><option value="weekend">केवल सप्ताहांत</option></select>
+          </label>
+          <label class="check-label"><input type="checkbox" name="contactConsent" value="true"> मैं सहमति देता/देती हूँ कि जरूरत पड़ने पर Shivasha Seva मेरी सेवा-रुचि और क्षेत्र की जानकारी अधिकृत समन्वयक से साझा कर सकता है।</label>
           <label class="check-label"><input type="checkbox" name="consent" value="true" required> मैं सहमत हूँ कि मेरी स्वयंसेवक रुचि समीक्षा के लिए दर्ज की जा सकती है।</label>
           <button class="button button-white" type="submit">स्वयंसेवक अनुरोध भेजें</button>
           <p class="form-feedback light-feedback" id="volunteerFeedback" role="status" aria-live="polite"></p>
