@@ -33,9 +33,18 @@ Copy `.env.example` into the server's secret environment and set:
 
 Never expose MongoDB port 27017 publicly. The API container must be attached to the same private Docker network as the existing `shivasha-database` service; verify the actual network name on the host before deployment.
 
-## Run with Docker
+## Run alongside the existing Shivasha Docker stack
 
-Build this directory as an image and run it on the existing Shivasha private Docker network. Publish the API only behind a reverse proxy with HTTPS. Do not start a second MongoDB container for Seva.
+This repository includes `compose.seva.yml`, a small Compose overlay that builds only the Seva API and attaches it to the existing `shivasha_default` Docker network. It does not define, replace, or start MongoDB.
+
+1. Confirm the existing Shivasha stack is running and its network is named `shivasha_default` (`docker network ls`).
+2. In the checked-out `shivasha-seva` repository, create a private server-side `.env` from `.env.example`; set a strong random `ADMIN_API_KEY`. Never commit this file.
+3. Run `docker compose -f compose.seva.yml up -d --build`.
+4. Check `docker compose -f compose.seva.yml ps` and the API health endpoint from inside the private network. The health check requires MongoDB to report `connected`.
+
+If the actual network name differs, change only the overlay's external network name after verifying it. Do not create another MongoDB container or publish port 27017.
+
+The API is exposed only to containers on the shared network. Publish it publicly only through the existing reverse proxy with HTTPS and a narrowly scoped route; do not expose the API container port directly.
 
 ## Current integration status
 
