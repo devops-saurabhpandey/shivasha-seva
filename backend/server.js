@@ -37,6 +37,9 @@ const intakeSchema = new mongoose.Schema({
   details: { type: String, default: "", maxlength: 1500 },
   priority: { type: String, enum: ["normal", "urgent", "emergency"], default: "normal" },
   consent: { type: Boolean, required: true, validate: value => value === true },
+  availableDays: { type: [{ type: String, enum: ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"] }], default: [] },
+  preferredTime: { type: String, enum: ["any", "morning", "afternoon", "evening", "weekend"], default: "any" },
+  contactConsent: { type: Boolean, default: false },
   status: { type: String, enum: ["new", "reviewed", "closed"], default: "new" }
 }, { timestamps: true, strict: "throw" });
 
@@ -58,9 +61,17 @@ function validateIntake(body, kind) {
   const location = cleanText(body.location, 120);
   const details = kind === "request" ? cleanText(body.details, 1500) : "";
   const priority = kind === "request" ? (body.priority || "normal") : "normal";
+  const allowedDays = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"];
+  const availableDays = kind === "volunteer" && Array.isArray(body.availableDays)
+    ? [...new Set(body.availableDays.filter(day => allowedDays.includes(day)))]
+    : [];
+  const preferredTime = kind === "volunteer" ? (body.preferredTime || "any") : "any";
+  const contactConsent = kind === "volunteer" && body.contactConsent === true;
   if (!category || !location || (kind === "request" && !details)) return { error: "कृपया सभी आवश्यक जानकारी भरें।" };
   if (!["normal", "urgent", "emergency"].includes(priority)) return { error: "कृपया मान्य प्राथमिकता चुनें।" };
-  return { value: { kind, category, location, details, priority, consent: true } };
+  if (kind === "volunteer" && (!Array.isArray(body.availableDays) || availableDays.length === 0)) return { error: "कृपया कम से कम एक उपलब्ध दिन चुनें।" };
+  if (kind === "volunteer" && !["any", "morning", "afternoon", "evening", "weekend"].includes(preferredTime)) return { error: "कृपया उपलब्ध समय चुनें।" };
+  return { value: { kind, category, location, details, priority, consent: true, availableDays, preferredTime, contactConsent } };
 }
 
 app.get("/api/health", (_req, res) => {
