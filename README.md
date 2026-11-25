@@ -19,10 +19,12 @@ This is a static website. Open `index.html` in a browser, or serve the folder wi
 
 ## Deploy with GitHub Pages
 
+This repository deploys through the GitHub Actions workflow at `.github/workflows/deploy-pages.yml`.
+
 1. Open repository **Settings → Pages**.
-2. Under **Build and deployment**, select **Deploy from a branch**.
-3. Choose branch **main** and folder **/(root)**, then save.
-4. After publishing, the expected URL is:
+2. Under **Build and deployment**, set **Source** to **GitHub Actions**.
+3. Push changes to the `main` branch, or manually run **Deploy Shivasha Seva to GitHub Pages** from the Actions tab.
+4. After the workflow completes successfully, open:
    `https://devops-saurabhpandey.github.io/shivasha-seva/`
 
 ## Important current limitations
@@ -40,7 +42,7 @@ This is a static website. Open `index.html` in a browser, or serve the folder wi
 3. Add an admin review queue before publishing any public help request.
 4. Verify partner NGOs, animal rescuers, veterinary providers and blood donors.
 5. Publish donation details only after legal, banking and accounting checks; publish periodic receipts and expense reports.
-6. Add privacy policy, terms, grievance contact and deletion-request process before collecting personal data.
+6. Publish a privacy policy, terms, grievance contact and deletion-request process before collecting personal data.
 
 ## Tech
 
