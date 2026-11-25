@@ -12,7 +12,7 @@ const adminApiKey = process.env.ADMIN_API_KEY || "";
 
 app.disable("x-powered-by");
 app.use(helmet());
-app.use(cors({ origin: frontendOrigin, methods: ["GET", "POST"], allowedHeaders: ["Content-Type", "Authorization"] }));
+app.use(cors({ origin: frontendOrigin, methods: ["GET", "POST", "PATCH"], allowedHeaders: ["Content-Type", "Authorization"] }));
 app.use(express.json({ limit: "10kb", strict: true }));
 
 const intakeLimiter = rateLimit({
@@ -88,6 +88,28 @@ function authorized(req) {
   if (!adminApiKey || supplied.length !== adminApiKey.length) return false;
   return crypto.timingSafeEqual(Buffer.from(supplied), Buffer.from(adminApiKey));
 }
+
+app.patch("/api/admin/submissions/:kind/:id", adminLimiter, async (req, res, next) => {
+  res.set("Cache-Control", "no-store");
+  if (!authorized(req)) return res.status(401).json({ error: "अनुमति नहीं है।" });
+  const Model = req.params.kind === "request" ? HelpRequest
+    : req.params.kind === "volunteer" ? Volunteer : null;
+  if (!Model) return res.status(400).json({ error: "अमान्य आवेदन प्रकार।" });
+  if (!mongoose.isValidObjectId(req.params.id)) return res.status(400).json({ error: "अमान्य रिकॉर्ड ID।" });
+  const status = req.body?.status;
+  if (!["new", "reviewed", "closed"].includes(status)) {
+    return res.status(400).json({ error: "अमान्य स्थिति।" });
+  }
+  try {
+    const updated = await Model.findByIdAndUpdate(
+      req.params.id,
+      { $set: { status } },
+      { new: true, runValidators: true, projection: { status: 1 } }
+    ).lean();
+    if (!updated) return res.status(404).json({ error: "रिकॉर्ड नहीं मिला।" });
+    res.json({ success: true, id: req.params.id, status: updated.status });
+  } catch (error) { next(error); }
+});
 
 app.get("/api/admin/submissions", adminLimiter, async (req, res, next) => {
   res.set("Cache-Control", "no-store");
