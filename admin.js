@@ -9,6 +9,7 @@ let sessionKey="";
 
 function cell(value){const td=document.createElement("td");td.textContent=value??"";return td}
 function dateLabel(value){const date=new Date(value);return Number.isNaN(date.getTime())?"—":date.toLocaleString("hi-IN")}
+function statusLabel(value){return ({new:"नया",reviewed:"जाँचा गया",closed:"बंद"})[value]||value}
 async function loadRecords(){
   if(!apiBase){message.textContent="API अभी configure नहीं है। Server deploy और health check के बाद api-config.js में HTTPS API URL सेट करें।";return}
   message.textContent="रिकॉर्ड लोड हो रहे हैं…";
@@ -24,7 +25,31 @@ async function loadRecords(){
       tr.append(cell(item.category));
       tr.append(cell(item.location));
       tr.append(cell(item.details||"—"));
-      tr.append(cell(item.status));
+      const statusCell=cell(statusLabel(item.status));
+      const actionCell=document.createElement("td");
+      const select=document.createElement("select");
+      select.setAttribute("aria-label","आवेदन की स्थिति");
+      for(const [value,label] of Object.entries({new:"नया",reviewed:"जाँचा गया",closed:"बंद"})){
+        const option=document.createElement("option");option.value=value;option.textContent=label;select.append(option);
+      }
+      select.value=item.status;
+      const save=document.createElement("button");save.type="button";save.className="small-action";save.textContent="बदलें";
+      save.addEventListener("click",async()=>{
+        save.disabled=true;message.textContent="स्थिति अपडेट हो रही है…";
+        try{
+          const update=await fetch(apiBase+"/api/admin/submissions/"+encodeURIComponent(item.kind)+"/"+encodeURIComponent(item._id),{
+            method:"PATCH",headers:{Authorization:"Bearer "+sessionKey,"Content-Type":"application/json"},
+            body:JSON.stringify({status:select.value}),cache:"no-store"
+          });
+          const result=await update.json().catch(()=>({}));
+          if(!update.ok)throw new Error(result.error||"स्थिति अपडेट नहीं हुई।");
+          statusCell.textContent=statusLabel(result.status);
+          message.textContent="आवेदन की स्थिति अपडेट हो गई।";
+        }catch(error){message.textContent=error.message||"अपडेट विफल रहा।"}
+        finally{save.disabled=false}
+      });
+      actionCell.append(select,save);
+      tr.append(statusCell,actionCell);
       rows.append(tr);
     }
     count.textContent="कुल रिकॉर्ड: "+(data.items||[]).length;
