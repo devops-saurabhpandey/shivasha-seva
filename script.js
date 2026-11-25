@@ -16,12 +16,45 @@ mainNav?.querySelectorAll("a").forEach((link) => {
 
 document.getElementById("year").textContent = new Date().getFullYear();
 
-function prepareShare(form, feedbackId, heading) {
+function prepareShare(form, feedbackId, heading, endpoint, categoryField) {
   const feedback = document.getElementById(feedbackId);
   form.addEventListener("submit", async (event) => {
     event.preventDefault();
     if (!form.reportValidity()) return;
+
     const data = new FormData(form);
+    const payload = {
+      [categoryField]: String(data.get(categoryField) || "").trim(),
+      location: String(data.get("location") || "").trim(),
+      consent: form.elements.namedItem("consent")?.checked === true
+    };
+    if (endpoint === "/api/requests") {
+      payload.details = String(data.get("details") || "").trim();
+    }
+
+    const apiBase = String(window.SHIVASHA_API_BASE_URL || "").trim().replace(/\/$/, "");
+    if (apiBase) {
+      const submitButton = form.querySelector('button[type="submit"]');
+      if (submitButton) submitButton.disabled = true;
+      feedback.textContent = "आपका अनुरोध सुरक्षित रूप से भेजा जा रहा है…";
+      try {
+        const response = await fetch(apiBase + endpoint, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(payload)
+        });
+        const result = await response.json().catch(() => ({}));
+        if (!response.ok) throw new Error(result.error || "अनुरोध भेजा नहीं जा सका।");
+        feedback.textContent = result.message || "आपका अनुरोध दर्ज हो गया।";
+        form.reset();
+      } catch (error) {
+        feedback.textContent = error.message || "सर्वर से संपर्क नहीं हो सका। कृपया बाद में प्रयास करें।";
+      } finally {
+        if (submitButton) submitButton.disabled = false;
+      }
+      return;
+    }
+
     const lines = [heading];
     for (const [key, value] of data.entries()) {
       if (key !== "consent" && String(value).trim()) lines.push(`${key}: ${String(value).trim()}`);
@@ -45,5 +78,5 @@ function prepareShare(form, feedbackId, heading) {
 
 const requestForm = document.getElementById("requestForm");
 const volunteerForm = document.getElementById("volunteerForm");
-if (requestForm) prepareShare(requestForm, "requestFeedback", "Shivasha Seva — सहायता अनुरोध");
-if (volunteerForm) prepareShare(volunteerForm, "volunteerFeedback", "Shivasha Seva — स्वयंसेवक जुड़ाव");
+if (requestForm) prepareShare(requestForm, "requestFeedback", "Shivasha Seva — सहायता अनुरोध", "/api/requests", "type");
+if (volunteerForm) prepareShare(volunteerForm, "volunteerFeedback", "Shivasha Seva — स्वयंसेवक जुड़ाव", "/api/volunteers", "interest");
