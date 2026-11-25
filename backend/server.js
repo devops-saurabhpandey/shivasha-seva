@@ -22,6 +22,13 @@ const intakeLimiter = rateLimit({
   legacyHeaders: false,
   message: { error: "बहुत अधिक अनुरोध आए हैं। कृपया कुछ देर बाद प्रयास करें।" }
 });
+const adminLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000,
+  limit: 10,
+  standardHeaders: "draft-8",
+  legacyHeaders: false,
+  message: { error: "बहुत अधिक admin प्रयास हुए हैं। कृपया 15 मिनट बाद प्रयास करें।" }
+});
 
 const intakeSchema = new mongoose.Schema({
   kind: { type: String, required: true, enum: ["request", "volunteer"] },
@@ -54,6 +61,7 @@ function validateIntake(body, kind) {
 }
 
 app.get("/api/health", (_req, res) => {
+  res.set("Cache-Control", "no-store");
   res.json({ status: "ok", service: "shivasha-seva-api", database: mongoose.connection.readyState === 1 ? "connected" : "disconnected" });
 });
 
@@ -81,7 +89,8 @@ function authorized(req) {
   return crypto.timingSafeEqual(Buffer.from(supplied), Buffer.from(adminApiKey));
 }
 
-app.get("/api/admin/submissions", async (req, res, next) => {
+app.get("/api/admin/submissions", adminLimiter, async (req, res, next) => {
+  res.set("Cache-Control", "no-store");
   if (!authorized(req)) return res.status(401).json({ error: "अनुमति नहीं है।" });
   try {
     const limit = Math.min(Math.max(Number(req.query.limit) || 50, 1), 100);
