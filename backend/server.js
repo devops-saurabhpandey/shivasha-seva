@@ -32,7 +32,11 @@ const intakeSchema = new mongoose.Schema({
   status: { type: String, enum: ["new", "reviewed", "closed"], default: "new" }
 }, { timestamps: true, strict: "throw" });
 
-const Intake = mongoose.models.Intake || mongoose.model("Intake", intakeSchema);
+intakeSchema.index({ createdAt: -1 });
+const HelpRequest = mongoose.models.SevaHelpRequest
+  || mongoose.model("SevaHelpRequest", intakeSchema, "seva_help_requests");
+const Volunteer = mongoose.models.SevaVolunteer
+  || mongoose.model("SevaVolunteer", intakeSchema, "seva_volunteers");
 
 function cleanText(value, maxLength) {
   if (typeof value !== "string") return "";
@@ -57,7 +61,7 @@ app.post("/api/requests", intakeLimiter, async (req, res, next) => {
   try {
     const parsed = validateIntake(req.body, "request");
     if (parsed.error) return res.status(400).json(parsed);
-    const saved = await Intake.create(parsed.value);
+    const saved = await HelpRequest.create(parsed.value);
     res.status(201).json({ success: true, id: saved.id, message: "आपका सहायता अनुरोध समीक्षा के लिए सुरक्षित रूप से दर्ज हुआ।" });
   } catch (error) { next(error); }
 });
@@ -66,13 +70,13 @@ app.post("/api/volunteers", intakeLimiter, async (req, res, next) => {
   try {
     const parsed = validateIntake(req.body, "volunteer");
     if (parsed.error) return res.status(400).json(parsed);
-    const saved = await Intake.create(parsed.value);
+    const saved = await Volunteer.create(parsed.value);
     res.status(201).json({ success: true, id: saved.id, message: "आपकी स्वयंसेवक रुचि समीक्षा के लिए दर्ज हुई।" });
   } catch (error) { next(error); }
 });
 
 function authorized(req) {
-  const supplied = req.get("authorization")?.replace(/^Bearer\s+/i, "") || "";
+  const supplied = req.get("authorization")?.replace(/^Bearer\\s+/i, "") || "";
   if (!adminApiKey || supplied.length !== adminApiKey.length) return false;
   return crypto.timingSafeEqual(Buffer.from(supplied), Buffer.from(adminApiKey));
 }
@@ -81,7 +85,13 @@ app.get("/api/admin/submissions", async (req, res, next) => {
   if (!authorized(req)) return res.status(401).json({ error: "अनुमति नहीं है।" });
   try {
     const limit = Math.min(Math.max(Number(req.query.limit) || 50, 1), 100);
-    const items = await Intake.find().sort({ createdAt: -1 }).limit(limit).lean();
+    const [requests, volunteers] = await Promise.all([
+      HelpRequest.find().sort({ createdAt: -1 }).limit(limit).lean(),
+      Volunteer.find().sort({ createdAt: -1 }).limit(limit).lean()
+    ]);
+    const items = [...requests, ...volunteers]
+      .sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt))
+      .slice(0, limit);
     res.json({ items });
   } catch (error) { next(error); }
 });
