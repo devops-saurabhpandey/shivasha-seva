@@ -7,3 +7,5 @@
 .emergency-alert{margin:14px 0;padding:14px 16px;border:1px solid #e9aaa3;border-left:5px solid #b42318;border-radius:10px;background:#fff0ed;color:#8f1d16;font-weight:800}.emergency-alert[hidden]{display:none}
 
 .match-note{font-size:.85rem;color:#365b49}
+
+.availability-field{border:1px solid rgba(255,255,255,.35);border-radius:12px;padding:12px;margin:0;color:inherit}.availability-field legend{padding:0 6px;font-weight:700}.day-options{display:flex;flex-wrap:wrap;gap:8px}.day-options label{display:inline-flex;align-items:center;gap:5px;font-size:.92rem}.day-options input{accent-color:currentColor}
