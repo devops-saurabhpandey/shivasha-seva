@@ -30,6 +30,7 @@ function prepareShare(form, feedbackId, heading, endpoint, categoryField) {
     };
     if (endpoint === "/api/requests") {
       payload.details = String(data.get("details") || "").trim();
+      payload.priority = String(data.get("priority") || "normal");
     }
 
     const apiBase = String(window.SHIVASHA_API_BASE_URL || "").trim().replace(/\/$/, "");
