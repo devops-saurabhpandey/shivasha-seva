@@ -99,7 +99,7 @@
           </label>
           <label>क्षेत्र / शहर <input name="location" required placeholder="जैसे: कानपुर, उत्तर प्रदेश"></label>
           <label>संक्षिप्त विवरण <textarea name="details" rows="4" required placeholder="किस प्रकार की मदद चाहिए? कृपया निजी या संवेदनशील जानकारी न लिखें।"></textarea></label>
-          <label class="check-label"><input type="checkbox" required> मैं सहमत हूँ कि संदेश में अनावश्यक निजी जानकारी शामिल नहीं है।</label>
+          <label class="check-label"><input type="checkbox" name="consent" value="true" required> मैं सहमत हूँ कि संदेश में अनावश्यक निजी जानकारी शामिल नहीं है और इसे समीक्षा के लिए दर्ज किया जा सकता है।</label>
           <button class="button button-primary" type="submit">संदेश तैयार करें</button>
           <p class="form-feedback" id="requestFeedback" role="status" aria-live="polite"></p>
         </form>
@@ -114,7 +114,8 @@
             <select name="interest" required><option value="">सेवा चुनें</option><option>मानव सहायता</option><option>पशु सहायता</option><option>पक्षी सेवा</option><option>स्वास्थ्य / रक्तदान</option><option>शिक्षा सहयोग</option><option>तकनीकी / अन्य सहयोग</option></select>
           </label>
           <label>आपका शहर / क्षेत्र <input name="location" required placeholder="शहर या क्षेत्र"></label>
-          <button class="button button-white" type="submit">जुड़ने का संदेश बनाएँ</button>
+          <label class="check-label"><input type="checkbox" name="consent" value="true" required> मैं सहमत हूँ कि मेरी स्वयंसेवक रुचि समीक्षा के लिए दर्ज की जा सकती है।</label>
+          <button class="button button-white" type="submit">स्वयंसेवक अनुरोध भेजें</button>
           <p class="form-feedback light-feedback" id="volunteerFeedback" role="status" aria-live="polite"></p>
         </form>
       </div>
@@ -129,6 +130,7 @@
     <div class="container footer-grid"><a class="brand footer-brand" href="#"><span class="brand-mark">शि</span><span><strong>Shivasha Seva</strong><small>सेवा ही धर्म</small></span></a><p>हर जीवन अनमोल है। करुणा से जुड़ें, जिम्मेदारी से सेवा करें।</p><div class="footer-links"><a href="#seva">सेवाएँ</a><a href="#request">सहायता</a><a href="#volunteer">स्वयंसेवक</a></div></div>
     <div class="container copyright">© <span id="year"></span> Shivasha Seva. सेवा, सम्मान और पारदर्शिता के लिए।</div>
   </footer>
+  <script src="api-config.js"></script>
   <script src="script.js"></script>
 </body>
 </html>
