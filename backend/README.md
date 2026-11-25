@@ -22,6 +22,16 @@ Other Shivasha modules keep their own collections. Do not run database-drop or r
 
 Submissions are private and are not published to the website. The admin key must never be placed in browser code.
 
+### Volunteer registration and matching
+
+Volunteer submissions include:
+
+- `availableDays`: at least one selected weekday (`Mon` through `Sun`) is required.
+- `preferredTime`: `any`, `morning`, `afternoon`, `evening` or `weekend`.
+- `contactConsent`: explicit optional permission to share the volunteer's service-interest and area details with an authorized coordinator.
+
+The Admin Dashboard suggests possible volunteers only when the volunteer is not closed, has explicitly granted `contactConsent`, has at least one available day, and the service category and normalized location text match the help request. This is a preliminary text-based suggestion, not GPS or distance matching. Help requests currently do not specify a requested day, so the dashboard does not claim that a volunteer's schedule matches a particular appointment. The feature does not send messages or expose phone numbers; no volunteer phone/contact field is collected by this form.
+
 ## Required environment
 
 Copy `.env.example` into the server's secret environment and set:
