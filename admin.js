@@ -25,7 +25,7 @@ function volunteerMatches(request){
   if(request.kind!=="request")return [];
   const place=normalizePlace(request.location),tags=serviceTags(request.category);
   return allItems.filter(person=>{
-    if(person.kind!=="volunteer"||person.status==="closed")return false;
+    if(person.kind!=="volunteer"||person.status==="closed"||person.contactConsent!==true||!Array.isArray(person.availableDays)||person.availableDays.length===0)return false;
     const volunteerPlace=normalizePlace(person.location);
     const sameArea=place&&volunteerPlace&&(place===volunteerPlace||place.includes(volunteerPlace)||volunteerPlace.includes(place));
     const volunteerTags=serviceTags(person.category);
