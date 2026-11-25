@@ -76,7 +76,7 @@ app.post("/api/volunteers", intakeLimiter, async (req, res, next) => {
 });
 
 function authorized(req) {
-  const supplied = req.get("authorization")?.replace(/^Bearer\\s+/i, "") || "";
+  const supplied = req.get("authorization")?.replace(/^Bearer\s+/i, "") || "";
   if (!adminApiKey || supplied.length !== adminApiKey.length) return false;
   return crypto.timingSafeEqual(Buffer.from(supplied), Buffer.from(adminApiKey));
 }
