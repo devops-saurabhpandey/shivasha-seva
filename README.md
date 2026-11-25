@@ -13,6 +13,10 @@ A responsive Hindi-first community service website for connecting people who wan
 - Service-request and volunteer-interest forms
 - Donation transparency and safety guidance
 
+## Backend API
+
+A Node.js + MongoDB API is being prepared in `backend/` for private help-request and volunteer-intake storage. Read [backend/README.md](backend/README.md) for endpoints, environment variables and deployment requirements. The API is not live yet; the public forms keep their share/clipboard behavior until a public HTTPS API URL is configured.
+
 ## Run locally
 
 This is a static website. Open `index.html` in a browser, or serve the folder with any static HTTP server.

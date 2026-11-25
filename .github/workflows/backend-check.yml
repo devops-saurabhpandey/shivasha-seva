@@ -1,0 +1,38 @@
+name: Check Shivasha Seva API
+
+on:
+  push:
+    branches: [main, "feature/**"]
+    paths:
+      - "backend/**"
+      - ".github/workflows/backend-check.yml"
+  pull_request:
+    paths:
+      - "backend/**"
+      - ".github/workflows/backend-check.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  syntax-and-dependency-check:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: backend
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - name: Install dependencies
+        run: npm install --ignore-scripts
+      - name: Check backend JavaScript syntax
+        run: node --check server.js
+      - name: Check admin dashboard JavaScript syntax
+        run: node --check ../admin.js
+      - name: Check public website JavaScript syntax
+        run: node --check ../script.js

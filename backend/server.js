@@ -1,0 +1,164 @@
+import crypto from "node:crypto";
+import express from "express";
+import cors from "cors";
+import helmet from "helmet";
+import mongoose from "mongoose";
+import { rateLimit } from "express-rate-limit";
+
+const app = express();
+const port = Number(process.env.PORT || 8080);
+const frontendOrigin = process.env.FRONTEND_ORIGIN || "https://devops-saurabhpandey.github.io";
+const adminApiKey = process.env.ADMIN_API_KEY || "";
+
+app.disable("x-powered-by");
+app.use(helmet());
+app.use(cors({ origin: frontendOrigin, methods: ["GET", "POST", "PATCH"], allowedHeaders: ["Content-Type", "Authorization"] }));
+app.use(express.json({ limit: "10kb", strict: true }));
+
+const intakeLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000,
+  limit: 8,
+  standardHeaders: "draft-8",
+  legacyHeaders: false,
+  message: { error: "बहुत अधिक अनुरोध आए हैं। कृपया कुछ देर बाद प्रयास करें।" }
+});
+const adminLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000,
+  limit: 10,
+  standardHeaders: "draft-8",
+  legacyHeaders: false,
+  message: { error: "बहुत अधिक admin प्रयास हुए हैं। कृपया 15 मिनट बाद प्रयास करें।" }
+});
+
+const intakeSchema = new mongoose.Schema({
+  kind: { type: String, required: true, enum: ["request", "volunteer"] },
+  category: { type: String, required: true, maxlength: 100 },
+  location: { type: String, required: true, maxlength: 120 },
+  details: { type: String, default: "", maxlength: 1500 },
+  priority: { type: String, enum: ["normal", "urgent", "emergency"], default: "normal" },
+  consent: { type: Boolean, required: true, validate: value => value === true },
+  availableDays: { type: [{ type: String, enum: ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"] }], default: [] },
+  preferredTime: { type: String, enum: ["any", "morning", "afternoon", "evening", "weekend"], default: "any" },
+  contactConsent: { type: Boolean, default: false },
+  status: { type: String, enum: ["new", "reviewed", "closed"], default: "new" }
+}, { timestamps: true, strict: "throw" });
+
+intakeSchema.index({ createdAt: -1 });
+const HelpRequest = mongoose.models.SevaHelpRequest
+  || mongoose.model("SevaHelpRequest", intakeSchema, "seva_help_requests");
+const Volunteer = mongoose.models.SevaVolunteer
+  || mongoose.model("SevaVolunteer", intakeSchema, "seva_volunteers");
+
+function cleanText(value, maxLength) {
+  if (typeof value !== "string") return "";
+  return value.trim().replace(/[\u0000-\u0008\u000B\u000C\u000E-\u001F\u007F]/g, "").slice(0, maxLength);
+}
+
+function validateIntake(body, kind) {
+  if (!body || typeof body !== "object" || Array.isArray(body)) return { error: "अमान्य अनुरोध।" };
+  if (body.consent !== true) return { error: "सहमति आवश्यक है।" };
+  const category = cleanText(kind === "request" ? body.type : body.interest, 100);
+  const location = cleanText(body.location, 120);
+  const details = kind === "request" ? cleanText(body.details, 1500) : "";
+  const priority = kind === "request" ? (body.priority || "normal") : "normal";
+  const allowedDays = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"];
+  const availableDays = kind === "volunteer" && Array.isArray(body.availableDays)
+    ? [...new Set(body.availableDays.filter(day => allowedDays.includes(day)))]
+    : [];
+  const preferredTime = kind === "volunteer" ? (body.preferredTime || "any") : "any";
+  const contactConsent = kind === "volunteer" && body.contactConsent === true;
+  if (!category || !location || (kind === "request" && !details)) return { error: "कृपया सभी आवश्यक जानकारी भरें।" };
+  if (!["normal", "urgent", "emergency"].includes(priority)) return { error: "कृपया मान्य प्राथमिकता चुनें।" };
+  if (kind === "volunteer" && (!Array.isArray(body.availableDays) || availableDays.length === 0)) return { error: "कृपया कम से कम एक उपलब्ध दिन चुनें।" };
+  if (kind === "volunteer" && !["any", "morning", "afternoon", "evening", "weekend"].includes(preferredTime)) return { error: "कृपया उपलब्ध समय चुनें।" };
+  return { value: { kind, category, location, details, priority, consent: true, availableDays, preferredTime, contactConsent } };
+}
+
+app.get("/api/health", (_req, res) => {
+  res.set("Cache-Control", "no-store");
+  res.json({ status: "ok", service: "shivasha-seva-api", database: mongoose.connection.readyState === 1 ? "connected" : "disconnected" });
+});
+
+app.post("/api/requests", intakeLimiter, async (req, res, next) => {
+  try {
+    const parsed = validateIntake(req.body, "request");
+    if (parsed.error) return res.status(400).json(parsed);
+    const saved = await HelpRequest.create(parsed.value);
+    res.status(201).json({ success: true, id: saved.id, message: "आपका सहायता अनुरोध समीक्षा के लिए सुरक्षित रूप से दर्ज हुआ।" });
+  } catch (error) { next(error); }
+});
+
+app.post("/api/volunteers", intakeLimiter, async (req, res, next) => {
+  try {
+    const parsed = validateIntake(req.body, "volunteer");
+    if (parsed.error) return res.status(400).json(parsed);
+    const saved = await Volunteer.create(parsed.value);
+    res.status(201).json({ success: true, id: saved.id, message: "आपकी स्वयंसेवक रुचि समीक्षा के लिए दर्ज हुई।" });
+  } catch (error) { next(error); }
+});
+
+function authorized(req) {
+  const supplied = req.get("authorization")?.replace(/^Bearer\s+/i, "") || "";
+  const suppliedBuffer = Buffer.from(supplied, "utf8");
+  const expectedBuffer = Buffer.from(adminApiKey, "utf8");
+  if (!adminApiKey || suppliedBuffer.length !== expectedBuffer.length) return false;
+  return crypto.timingSafeEqual(suppliedBuffer, expectedBuffer);
+}
+
+app.patch("/api/admin/submissions/:kind/:id", adminLimiter, async (req, res, next) => {
+  res.set("Cache-Control", "no-store");
+  if (!authorized(req)) return res.status(401).json({ error: "अनुमति नहीं है।" });
+  const Model = req.params.kind === "request" ? HelpRequest
+    : req.params.kind === "volunteer" ? Volunteer : null;
+  if (!Model) return res.status(400).json({ error: "अमान्य आवेदन प्रकार।" });
+  if (!mongoose.isValidObjectId(req.params.id)) return res.status(400).json({ error: "अमान्य रिकॉर्ड ID।" });
+  const status = req.body?.status;
+  if (!["new", "reviewed", "closed"].includes(status)) {
+    return res.status(400).json({ error: "अमान्य स्थिति।" });
+  }
+  try {
+    const updated = await Model.findByIdAndUpdate(
+      req.params.id,
+      { $set: { status } },
+      { new: true, runValidators: true, projection: { status: 1 } }
+    ).lean();
+    if (!updated) return res.status(404).json({ error: "रिकॉर्ड नहीं मिला।" });
+    res.json({ success: true, id: req.params.id, status: updated.status });
+  } catch (error) { next(error); }
+});
+
+app.get("/api/admin/submissions", adminLimiter, async (req, res, next) => {
+  res.set("Cache-Control", "no-store");
+  if (!authorized(req)) return res.status(401).json({ error: "अनुमति नहीं है।" });
+  try {
+    const limit = Math.min(Math.max(Number(req.query.limit) || 50, 1), 100);
+    const [requests, volunteers] = await Promise.all([
+      HelpRequest.find().sort({ createdAt: -1 }).limit(limit).lean(),
+      Volunteer.find().sort({ createdAt: -1 }).limit(limit).lean()
+    ]);
+    const items = [...requests, ...volunteers]
+      .sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt))
+      .slice(0, limit);
+    res.json({ items });
+  } catch (error) { next(error); }
+});
+
+app.use((error, _req, res, _next) => {
+  console.error("API error:", error.message);
+  if (error?.name === "ValidationError" || error?.name === "StrictModeError") {
+    return res.status(400).json({ error: "जानकारी मान्य नहीं है।" });
+  }
+  res.status(500).json({ error: "सर्वर में समस्या है। कृपया बाद में प्रयास करें।" });
+});
+
+async function start() {
+  if (!process.env.MONGODB_URI) throw new Error("MONGODB_URI environment variable is required");
+  if (!adminApiKey || adminApiKey.length < 32) throw new Error("ADMIN_API_KEY must be set to a random value of at least 32 characters");
+  await mongoose.connect(process.env.MONGODB_URI, { serverSelectionTimeoutMS: 10000 });
+  app.listen(port, "0.0.0.0", () => console.log(`Shivasha Seva API listening on ${port}`));
+}
+
+start().catch(error => {
+  console.error("Startup failed:", error.message);
+  process.exit(1);
+});

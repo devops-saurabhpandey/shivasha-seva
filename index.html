@@ -97,9 +97,13 @@
           <label>किस तरह की सहायता चाहिए?
             <select name="type" required><option value="">चुनें</option><option>जरूरतमंद व्यक्ति / परिवार</option><option>बुजुर्ग या दिव्यांग सहायता</option><option>घायल / बीमार पशु</option><option>घायल पक्षी</option><option>रक्तदान / स्वास्थ्य</option><option>शिक्षा सामग्री</option><option>अन्य</option></select>
           </label>
+          <label>सहायता की प्राथमिकता
+            <select name="priority" required><option value="normal" selected>सामान्य — नियमित सहायता</option><option value="urgent">तत्काल — जल्द सहायता आवश्यक</option><option value="emergency">आपातकालीन — गंभीर खतरा / चोट</option></select>
+          </label>
+          <p class="safety-note">आपातकालीन स्थिति में पुलिस, एम्बुलेंस या संबंधित स्थानीय आपात सेवा से तुरंत संपर्क करें। Shivasha Seva का फॉर्म आपातकालीन सेवाओं का विकल्प नहीं है।</p>
           <label>क्षेत्र / शहर <input name="location" required placeholder="जैसे: कानपुर, उत्तर प्रदेश"></label>
           <label>संक्षिप्त विवरण <textarea name="details" rows="4" required placeholder="किस प्रकार की मदद चाहिए? कृपया निजी या संवेदनशील जानकारी न लिखें।"></textarea></label>
-          <label class="check-label"><input type="checkbox" required> मैं सहमत हूँ कि संदेश में अनावश्यक निजी जानकारी शामिल नहीं है।</label>
+          <label class="check-label"><input type="checkbox" name="consent" value="true" required> मैं सहमत हूँ कि संदेश में अनावश्यक निजी जानकारी शामिल नहीं है और इसे समीक्षा के लिए दर्ज किया जा सकता है।</label>
           <button class="button button-primary" type="submit">संदेश तैयार करें</button>
           <p class="form-feedback" id="requestFeedback" role="status" aria-live="polite"></p>
         </form>
@@ -113,8 +117,25 @@
           <label>आप किस सेवा में मदद करना चाहेंगे?
             <select name="interest" required><option value="">सेवा चुनें</option><option>मानव सहायता</option><option>पशु सहायता</option><option>पक्षी सेवा</option><option>स्वास्थ्य / रक्तदान</option><option>शिक्षा सहयोग</option><option>तकनीकी / अन्य सहयोग</option></select>
           </label>
-          <label>आपका शहर / क्षेत्र <input name="location" required placeholder="शहर या क्षेत्र"></label>
-          <button class="button button-white" type="submit">जुड़ने का संदेश बनाएँ</button>
+          <label>आपका शहर / सेवा क्षेत्र <input name="location" required maxlength="120" placeholder="शहर, मोहल्ला या आसपास का क्षेत्र"></label>
+          <fieldset class="availability-field">
+            <legend>आप किन दिनों में उपलब्ध हैं?</legend>
+            <div class="day-options">
+              <label><input type="checkbox" name="availableDays" value="Mon"> सोम</label>
+              <label><input type="checkbox" name="availableDays" value="Tue"> मंगल</label>
+              <label><input type="checkbox" name="availableDays" value="Wed"> बुध</label>
+              <label><input type="checkbox" name="availableDays" value="Thu"> गुरु</label>
+              <label><input type="checkbox" name="availableDays" value="Fri"> शुक्र</label>
+              <label><input type="checkbox" name="availableDays" value="Sat"> शनि</label>
+              <label><input type="checkbox" name="availableDays" value="Sun"> रवि</label>
+            </div>
+          </fieldset>
+          <label>सुविधाजनक समय
+            <select name="preferredTime"><option value="any">कोई भी समय</option><option value="morning">सुबह</option><option value="afternoon">दोपहर</option><option value="evening">शाम</option><option value="weekend">केवल सप्ताहांत</option></select>
+          </label>
+          <label class="check-label"><input type="checkbox" name="contactConsent" value="true"> मैं सहमति देता/देती हूँ कि जरूरत पड़ने पर Shivasha Seva मेरी सेवा-रुचि और क्षेत्र की जानकारी अधिकृत समन्वयक से साझा कर सकता है।</label>
+          <label class="check-label"><input type="checkbox" name="consent" value="true" required> मैं सहमत हूँ कि मेरी स्वयंसेवक रुचि समीक्षा के लिए दर्ज की जा सकती है।</label>
+          <button class="button button-white" type="submit">स्वयंसेवक अनुरोध भेजें</button>
           <p class="form-feedback light-feedback" id="volunteerFeedback" role="status" aria-live="polite"></p>
         </form>
       </div>
@@ -129,6 +150,7 @@
     <div class="container footer-grid"><a class="brand footer-brand" href="#"><span class="brand-mark">शि</span><span><strong>Shivasha Seva</strong><small>सेवा ही धर्म</small></span></a><p>हर जीवन अनमोल है। करुणा से जुड़ें, जिम्मेदारी से सेवा करें।</p><div class="footer-links"><a href="#seva">सेवाएँ</a><a href="#request">सहायता</a><a href="#volunteer">स्वयंसेवक</a></div></div>
     <div class="container copyright">© <span id="year"></span> Shivasha Seva. सेवा, सम्मान और पारदर्शिता के लिए।</div>
   </footer>
+  <script src="api-config.js"></script>
   <script src="script.js"></script>
 </body>
 </html>
